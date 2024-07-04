@@ -1,0 +1,72 @@
+import pandas as pd
+
+def analyze_demographics(data_path):
+  """
+  Analyzes demographic data in a CSV file and answers questions
+
+  Args:
+      data_path: Path to the CSV file containing demographic data
+
+  Returns:
+      A dictionary containing the answers to the questions about the data
+  """
+
+  # Read data from CSV file
+  df = pd.read_csv(data_path)
+
+  # 1. How many people of each race are represented?
+  race_counts = df['race'].value_counts().sort_values(ascending=False)
+
+  # 2. Average age of men
+  avg_age_men = round(df[df['sex'] == 'Male']['age'].mean(), 1)
+
+  # 3. Percentage with Bachelor's degree
+  bachelors_perc = round(
+      (df['education'] == 'Bachelors').mean() * 100, 1)
+
+  # 4. Percentage with advanced education making >50K
+  advanced_education = df[df['education'].isin(['Bachelors', 'Masters', 'Doctorate'])]
+  advanced_over_50k_perc = round(
+      (advanced_education['salary'] == '>50K').mean() * 100, 1)
+
+  # 5. Percentage without advanced education making >50K
+  not_advanced_education = df[~df['education'].isin(['Bachelors', 'Masters', 'Doctorate'])]
+  not_advanced_over_50k_perc = round(
+      (not_advanced_education['salary'] == '>50K').mean() * 100, 1)
+
+  # 6. Minimum hours worked per week
+  min_hours = df['hours-per-week'].min()
+
+  # 7. Percentage of minimum wage earners making >50K
+  min_wage_earners = df[df['hours-per-week'] == min_hours]
+  min_wage_over_50k_perc = round(
+      (min_wage_earners['salary'] == '>50K').mean() * 100, 1)
+
+  # 8. Country with highest percentage earning >50K
+  country_over_50k_perc = (
+      df[df['salary'] == '>50K']['native-country'].value_counts(normalize=True) * 100).sort_values(ascending=False)
+  highest_earning_country = country_over_50k_perc.index[0]
+  highest_earning_perc = round(country_over_50k_perc.iloc[0], 1)
+
+  # 9. Most popular occupation for >50K earners in India
+  india_over_50k = df[(df['salary'] == '>50K') & (df['native-country'] == 'India')]
+  if len(india_over_50k) > 0:  # Handle potential empty DataFrame
+      most_popular_occupation_india = india_over_50k['occupation'].mode().iloc[0]
+  else:
+      most_popular_occupation_india = 'No data (no >50K earners from India)'
+
+  # Create dictionary with answers
+  answers = {
+      'race_counts': race_counts,
+      'avg_age_men': avg_age_men,
+      'bachelors_perc': bachelors_perc,
+      'advanced_over_50k_perc': advanced_over_50k_perc,
+      'not_advanced_over_50k_perc': not_advanced_over_50k_perc,
+      'min_hours': min_hours,
+      'min_wage_over_50k_perc': min_wage_over_50k_perc,
+      'highest_earning_country': highest_earning_country,
+      'highest_earning_perc': highest_earning_perc,
+      'most_popular_occupation_india': most_popular_occupation_india
+  }
+
+  return answers
